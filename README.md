@@ -3,14 +3,19 @@ Must haves
 - [] Accessibility
 - [] Easy to use CMS
 - [] easy to follow Readme
-  - [] SEO
 
 - [x] TailwindCSS
 - [x] shadcn
 - [x] Theming
-- [] Live preview
+      - [x] \_seo homepage
+- [x] Live preview homepage
+
 - [] Localization
 - [] Sidebar / course structure
+- [] Live preview pages
+- [] Live preview lessons
+  - [] seo pages
+  - [] seo lessons
 - [] Stripe binding / auth / access restriction
 - [] Basic exercises
 - [] Generate cms fields with ai
