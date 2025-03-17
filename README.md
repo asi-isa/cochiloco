@@ -9,8 +9,8 @@ Must haves
 - [x] Theming
       - [x] \_seo homepage
 - [x] Live preview homepage
+- [x] Localization
 
-- [] Localization
 - [] Sidebar / course structure
 - [] sitemap
 - [] Live preview pages

@@ -89,7 +89,7 @@ export interface Config {
   globalsSelect: {
     'home-page': HomePageSelect<false> | HomePageSelect<true>;
   };
-  locale: null;
+  locale: 'en' | 'de';
   user: User & {
     collection: 'users';
   };

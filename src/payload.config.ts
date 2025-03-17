@@ -10,6 +10,7 @@ import sharp from 'sharp'
 import { Users } from './app/(payload)/collections/users'
 import { CollectionConfigs } from './app/(payload)/collections'
 import { GlobalConfigs } from './app/(payload)/globals'
+import { defaultLocale, locales } from './lib/i18n/i18nConfig'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
@@ -20,6 +21,10 @@ export default buildConfig({
     importMap: {
       baseDir: path.resolve(dirname),
     },
+  },
+  localization: {
+    locales: locales,
+    defaultLocale: defaultLocale,
   },
   collections: CollectionConfigs,
   globals: GlobalConfigs,

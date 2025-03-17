@@ -10,7 +10,7 @@ export const HomePageConfig: GlobalConfig = {
   label: 'Home Page',
   admin: {
     livePreview: {
-      url: '/',
+      url: ({ locale }) => `/${locale.code}`,
       breakpoints: [
         {
           label: 'Mobile',
