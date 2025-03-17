@@ -1,7 +1,9 @@
 Must haves
 
-- [x] TailwindCSS
 - [] Accessibility
+
+- [x] TailwindCSS
+- [x] shadcn
 - [] Theming
 - [] Live preview
 - [] Localization
