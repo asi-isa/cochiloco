@@ -12,6 +12,7 @@ Must haves
 
 - [] Localization
 - [] Sidebar / course structure
+- [] sitemap
 - [] Live preview pages
 - [] Live preview lessons
   - [] seo pages
