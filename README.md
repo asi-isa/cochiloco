@@ -4,7 +4,7 @@ Must haves
 
 - [x] TailwindCSS
 - [x] shadcn
-- [] Theming
+- [x] Theming
 - [] Live preview
 - [] Localization
 - [] Sidebar / course structure

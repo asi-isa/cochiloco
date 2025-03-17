@@ -4,6 +4,7 @@ import React from 'react'
 
 import config from '@/payload.config'
 import './styles.css'
+import { ThemeToggle } from '@/components/theme/theme-toggle'
 
 export default async function HomePage() {
   const headers = await getHeaders()
@@ -14,6 +15,7 @@ export default async function HomePage() {
   return (
     <div>
       <h1 className="text-3xl font-bold underline">Hello world!</h1>
+      <ThemeToggle />
     </div>
   )
 }
