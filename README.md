@@ -2,12 +2,13 @@ Must haves
 
 - [] Accessibility
 - [] Easy to use CMS
+- [] easy to follow Readme
+  - [] SEO
 
 - [x] TailwindCSS
 - [x] shadcn
 - [x] Theming
 - [] Live preview
-  - [] SEO
 - [] Localization
 - [] Sidebar / course structure
 - [] Stripe binding / auth / access restriction
