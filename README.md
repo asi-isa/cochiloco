@@ -7,10 +7,12 @@ Must haves
 - [x] TailwindCSS
 - [x] shadcn
 - [x] Theming
-      - [x] \_seo homepage
+      - [x] seo homepage
 - [x] Live preview homepage
 - [x] Localization
 
+- [] CourseStructureGlobal has ChapterCollection has LessonCollection,
+- [] course structure: orderable,
 - [] Sidebar / course structure
 - [] sitemap
 - [] Live preview pages

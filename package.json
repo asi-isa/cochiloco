@@ -18,7 +18,8 @@
     "lint": "cross-env NODE_OPTIONS=--no-deprecation next lint",
     "payload": "cross-env NODE_OPTIONS=--no-deprecation payload",
     "start": "cross-env NODE_OPTIONS=--no-deprecation next start",
-    "db:start": "./scripts/start_database.sh"
+    "db:start": "./scripts/start_database.sh",
+    "db:del": "./scripts/delete_database.sh"
   },
   "dependencies": {
     "@payloadcms/db-postgres": "latest",

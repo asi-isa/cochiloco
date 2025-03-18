@@ -66,6 +66,8 @@ export interface Config {
   };
   blocks: {};
   collections: {
+    lessons: Lesson;
+    chapters: Chapter;
     users: User;
     media: Media;
     'payload-locked-documents': PayloadLockedDocument;
@@ -74,6 +76,8 @@ export interface Config {
   };
   collectionsJoins: {};
   collectionsSelect: {
+    lessons: LessonsSelect<false> | LessonsSelect<true>;
+    chapters: ChaptersSelect<false> | ChaptersSelect<true>;
     users: UsersSelect<false> | UsersSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
@@ -85,9 +89,11 @@ export interface Config {
   };
   globals: {
     'home-page': HomePage;
+    'course-structure': CourseStructure;
   };
   globalsSelect: {
     'home-page': HomePageSelect<false> | HomePageSelect<true>;
+    'course-structure': CourseStructureSelect<false> | CourseStructureSelect<true>;
   };
   locale: 'en' | 'de';
   user: User & {
@@ -115,6 +121,27 @@ export interface UserAuthOperations {
     email: string;
     password: string;
   };
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "lessons".
+ */
+export interface Lesson {
+  id: number;
+  title: string;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "chapters".
+ */
+export interface Chapter {
+  id: number;
+  title: string;
+  lessons?: (number | Lesson)[] | null;
+  updatedAt: string;
+  createdAt: string;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -159,6 +186,14 @@ export interface Media {
 export interface PayloadLockedDocument {
   id: number;
   document?:
+    | ({
+        relationTo: 'lessons';
+        value: number | Lesson;
+      } | null)
+    | ({
+        relationTo: 'chapters';
+        value: number | Chapter;
+      } | null)
     | ({
         relationTo: 'users';
         value: number | User;
@@ -208,6 +243,25 @@ export interface PayloadMigration {
   batch?: number | null;
   updatedAt: string;
   createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "lessons_select".
+ */
+export interface LessonsSelect<T extends boolean = true> {
+  title?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "chapters_select".
+ */
+export interface ChaptersSelect<T extends boolean = true> {
+  title?: T;
+  lessons?: T;
+  updatedAt?: T;
+  createdAt?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -294,6 +348,16 @@ export interface HomePage {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "course-structure".
+ */
+export interface CourseStructure {
+  id: number;
+  chapters?: (number | Chapter)[] | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "home-page_select".
  */
 export interface HomePageSelect<T extends boolean = true> {
@@ -305,6 +369,16 @@ export interface HomePageSelect<T extends boolean = true> {
         description?: T;
         image?: T;
       };
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "course-structure_select".
+ */
+export interface CourseStructureSelect<T extends boolean = true> {
+  chapters?: T;
   updatedAt?: T;
   createdAt?: T;
   globalType?: T;

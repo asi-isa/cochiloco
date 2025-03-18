@@ -3,6 +3,41 @@ import { MigrateUpArgs, MigrateDownArgs, sql } from '@payloadcms/db-postgres'
 export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   await db.execute(sql`
    CREATE TYPE "public"."_locales" AS ENUM('en', 'de');
+  CREATE TABLE IF NOT EXISTS "lessons" (
+  	"id" serial PRIMARY KEY NOT NULL,
+  	"updated_at" timestamp(3) with time zone DEFAULT now() NOT NULL,
+  	"created_at" timestamp(3) with time zone DEFAULT now() NOT NULL
+  );
+  
+  CREATE TABLE IF NOT EXISTS "lessons_locales" (
+  	"title" varchar NOT NULL,
+  	"id" serial PRIMARY KEY NOT NULL,
+  	"_locale" "_locales" NOT NULL,
+  	"_parent_id" integer NOT NULL
+  );
+  
+  CREATE TABLE IF NOT EXISTS "chapters" (
+  	"id" serial PRIMARY KEY NOT NULL,
+  	"updated_at" timestamp(3) with time zone DEFAULT now() NOT NULL,
+  	"created_at" timestamp(3) with time zone DEFAULT now() NOT NULL
+  );
+  
+  CREATE TABLE IF NOT EXISTS "chapters_locales" (
+  	"title" varchar NOT NULL,
+  	"id" serial PRIMARY KEY NOT NULL,
+  	"_locale" "_locales" NOT NULL,
+  	"_parent_id" integer NOT NULL
+  );
+  
+  CREATE TABLE IF NOT EXISTS "chapters_rels" (
+  	"id" serial PRIMARY KEY NOT NULL,
+  	"order" integer,
+  	"parent_id" integer NOT NULL,
+  	"path" varchar NOT NULL,
+  	"locale" "_locales",
+  	"lessons_id" integer
+  );
+  
   CREATE TABLE IF NOT EXISTS "users" (
   	"id" serial PRIMARY KEY NOT NULL,
   	"updated_at" timestamp(3) with time zone DEFAULT now() NOT NULL,
@@ -44,6 +79,8 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   	"order" integer,
   	"parent_id" integer NOT NULL,
   	"path" varchar NOT NULL,
+  	"lessons_id" integer,
+  	"chapters_id" integer,
   	"users_id" integer,
   	"media_id" integer
   );
@@ -88,8 +125,59 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   	"_parent_id" integer NOT NULL
   );
   
+  CREATE TABLE IF NOT EXISTS "course_structure" (
+  	"id" serial PRIMARY KEY NOT NULL,
+  	"updated_at" timestamp(3) with time zone,
+  	"created_at" timestamp(3) with time zone
+  );
+  
+  CREATE TABLE IF NOT EXISTS "course_structure_rels" (
+  	"id" serial PRIMARY KEY NOT NULL,
+  	"order" integer,
+  	"parent_id" integer NOT NULL,
+  	"path" varchar NOT NULL,
+  	"locale" "_locales",
+  	"chapters_id" integer
+  );
+  
+  DO $$ BEGIN
+   ALTER TABLE "lessons_locales" ADD CONSTRAINT "lessons_locales_parent_id_fk" FOREIGN KEY ("_parent_id") REFERENCES "public"."lessons"("id") ON DELETE cascade ON UPDATE no action;
+  EXCEPTION
+   WHEN duplicate_object THEN null;
+  END $$;
+  
+  DO $$ BEGIN
+   ALTER TABLE "chapters_locales" ADD CONSTRAINT "chapters_locales_parent_id_fk" FOREIGN KEY ("_parent_id") REFERENCES "public"."chapters"("id") ON DELETE cascade ON UPDATE no action;
+  EXCEPTION
+   WHEN duplicate_object THEN null;
+  END $$;
+  
+  DO $$ BEGIN
+   ALTER TABLE "chapters_rels" ADD CONSTRAINT "chapters_rels_parent_fk" FOREIGN KEY ("parent_id") REFERENCES "public"."chapters"("id") ON DELETE cascade ON UPDATE no action;
+  EXCEPTION
+   WHEN duplicate_object THEN null;
+  END $$;
+  
+  DO $$ BEGIN
+   ALTER TABLE "chapters_rels" ADD CONSTRAINT "chapters_rels_lessons_fk" FOREIGN KEY ("lessons_id") REFERENCES "public"."lessons"("id") ON DELETE cascade ON UPDATE no action;
+  EXCEPTION
+   WHEN duplicate_object THEN null;
+  END $$;
+  
   DO $$ BEGIN
    ALTER TABLE "payload_locked_documents_rels" ADD CONSTRAINT "payload_locked_documents_rels_parent_fk" FOREIGN KEY ("parent_id") REFERENCES "public"."payload_locked_documents"("id") ON DELETE cascade ON UPDATE no action;
+  EXCEPTION
+   WHEN duplicate_object THEN null;
+  END $$;
+  
+  DO $$ BEGIN
+   ALTER TABLE "payload_locked_documents_rels" ADD CONSTRAINT "payload_locked_documents_rels_lessons_fk" FOREIGN KEY ("lessons_id") REFERENCES "public"."lessons"("id") ON DELETE cascade ON UPDATE no action;
+  EXCEPTION
+   WHEN duplicate_object THEN null;
+  END $$;
+  
+  DO $$ BEGIN
+   ALTER TABLE "payload_locked_documents_rels" ADD CONSTRAINT "payload_locked_documents_rels_chapters_fk" FOREIGN KEY ("chapters_id") REFERENCES "public"."chapters"("id") ON DELETE cascade ON UPDATE no action;
   EXCEPTION
    WHEN duplicate_object THEN null;
   END $$;
@@ -130,6 +218,29 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
    WHEN duplicate_object THEN null;
   END $$;
   
+  DO $$ BEGIN
+   ALTER TABLE "course_structure_rels" ADD CONSTRAINT "course_structure_rels_parent_fk" FOREIGN KEY ("parent_id") REFERENCES "public"."course_structure"("id") ON DELETE cascade ON UPDATE no action;
+  EXCEPTION
+   WHEN duplicate_object THEN null;
+  END $$;
+  
+  DO $$ BEGIN
+   ALTER TABLE "course_structure_rels" ADD CONSTRAINT "course_structure_rels_chapters_fk" FOREIGN KEY ("chapters_id") REFERENCES "public"."chapters"("id") ON DELETE cascade ON UPDATE no action;
+  EXCEPTION
+   WHEN duplicate_object THEN null;
+  END $$;
+  
+  CREATE INDEX IF NOT EXISTS "lessons_updated_at_idx" ON "lessons" USING btree ("updated_at");
+  CREATE INDEX IF NOT EXISTS "lessons_created_at_idx" ON "lessons" USING btree ("created_at");
+  CREATE UNIQUE INDEX IF NOT EXISTS "lessons_locales_locale_parent_id_unique" ON "lessons_locales" USING btree ("_locale","_parent_id");
+  CREATE INDEX IF NOT EXISTS "chapters_updated_at_idx" ON "chapters" USING btree ("updated_at");
+  CREATE INDEX IF NOT EXISTS "chapters_created_at_idx" ON "chapters" USING btree ("created_at");
+  CREATE UNIQUE INDEX IF NOT EXISTS "chapters_locales_locale_parent_id_unique" ON "chapters_locales" USING btree ("_locale","_parent_id");
+  CREATE INDEX IF NOT EXISTS "chapters_rels_order_idx" ON "chapters_rels" USING btree ("order");
+  CREATE INDEX IF NOT EXISTS "chapters_rels_parent_idx" ON "chapters_rels" USING btree ("parent_id");
+  CREATE INDEX IF NOT EXISTS "chapters_rels_path_idx" ON "chapters_rels" USING btree ("path");
+  CREATE INDEX IF NOT EXISTS "chapters_rels_locale_idx" ON "chapters_rels" USING btree ("locale");
+  CREATE INDEX IF NOT EXISTS "chapters_rels_lessons_id_idx" ON "chapters_rels" USING btree ("lessons_id","locale");
   CREATE INDEX IF NOT EXISTS "users_updated_at_idx" ON "users" USING btree ("updated_at");
   CREATE INDEX IF NOT EXISTS "users_created_at_idx" ON "users" USING btree ("created_at");
   CREATE UNIQUE INDEX IF NOT EXISTS "users_email_idx" ON "users" USING btree ("email");
@@ -142,6 +253,8 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   CREATE INDEX IF NOT EXISTS "payload_locked_documents_rels_order_idx" ON "payload_locked_documents_rels" USING btree ("order");
   CREATE INDEX IF NOT EXISTS "payload_locked_documents_rels_parent_idx" ON "payload_locked_documents_rels" USING btree ("parent_id");
   CREATE INDEX IF NOT EXISTS "payload_locked_documents_rels_path_idx" ON "payload_locked_documents_rels" USING btree ("path");
+  CREATE INDEX IF NOT EXISTS "payload_locked_documents_rels_lessons_id_idx" ON "payload_locked_documents_rels" USING btree ("lessons_id");
+  CREATE INDEX IF NOT EXISTS "payload_locked_documents_rels_chapters_id_idx" ON "payload_locked_documents_rels" USING btree ("chapters_id");
   CREATE INDEX IF NOT EXISTS "payload_locked_documents_rels_users_id_idx" ON "payload_locked_documents_rels" USING btree ("users_id");
   CREATE INDEX IF NOT EXISTS "payload_locked_documents_rels_media_id_idx" ON "payload_locked_documents_rels" USING btree ("media_id");
   CREATE INDEX IF NOT EXISTS "payload_preferences_key_idx" ON "payload_preferences" USING btree ("key");
@@ -154,12 +267,22 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   CREATE INDEX IF NOT EXISTS "payload_migrations_updated_at_idx" ON "payload_migrations" USING btree ("updated_at");
   CREATE INDEX IF NOT EXISTS "payload_migrations_created_at_idx" ON "payload_migrations" USING btree ("created_at");
   CREATE INDEX IF NOT EXISTS "home_page_meta_meta_image_idx" ON "home_page_locales" USING btree ("meta_image_id","_locale");
-  CREATE UNIQUE INDEX IF NOT EXISTS "home_page_locales_locale_parent_id_unique" ON "home_page_locales" USING btree ("_locale","_parent_id");`)
+  CREATE UNIQUE INDEX IF NOT EXISTS "home_page_locales_locale_parent_id_unique" ON "home_page_locales" USING btree ("_locale","_parent_id");
+  CREATE INDEX IF NOT EXISTS "course_structure_rels_order_idx" ON "course_structure_rels" USING btree ("order");
+  CREATE INDEX IF NOT EXISTS "course_structure_rels_parent_idx" ON "course_structure_rels" USING btree ("parent_id");
+  CREATE INDEX IF NOT EXISTS "course_structure_rels_path_idx" ON "course_structure_rels" USING btree ("path");
+  CREATE INDEX IF NOT EXISTS "course_structure_rels_locale_idx" ON "course_structure_rels" USING btree ("locale");
+  CREATE INDEX IF NOT EXISTS "course_structure_rels_chapters_id_idx" ON "course_structure_rels" USING btree ("chapters_id","locale");`)
 }
 
 export async function down({ db, payload, req }: MigrateDownArgs): Promise<void> {
   await db.execute(sql`
-   DROP TABLE "users" CASCADE;
+   DROP TABLE "lessons" CASCADE;
+  DROP TABLE "lessons_locales" CASCADE;
+  DROP TABLE "chapters" CASCADE;
+  DROP TABLE "chapters_locales" CASCADE;
+  DROP TABLE "chapters_rels" CASCADE;
+  DROP TABLE "users" CASCADE;
   DROP TABLE "media" CASCADE;
   DROP TABLE "payload_locked_documents" CASCADE;
   DROP TABLE "payload_locked_documents_rels" CASCADE;
@@ -168,5 +291,7 @@ export async function down({ db, payload, req }: MigrateDownArgs): Promise<void>
   DROP TABLE "payload_migrations" CASCADE;
   DROP TABLE "home_page" CASCADE;
   DROP TABLE "home_page_locales" CASCADE;
+  DROP TABLE "course_structure" CASCADE;
+  DROP TABLE "course_structure_rels" CASCADE;
   DROP TYPE "public"."_locales";`)
 }
